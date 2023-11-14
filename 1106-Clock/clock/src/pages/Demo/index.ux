@@ -16,23 +16,25 @@ export default {
   },
 
   onShow() {
-    const canvas = document.getElementById('clock');
+    // 手机调试会报错
+    // const canvas = document.getElementById('clock');
+    const canvas = this.$element('clock');
     const ctx = canvas.getContext('2d');
 
     setInterval(() => {
       // 清除画布
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, 500, 500);
 
       // 绘制表盘的外圆
       ctx.beginPath();
-      ctx.arc(canvas.width / 2, canvas.height / 2, 200, 0, Math.PI * 2);
+      ctx.arc(250, 250, 200, 0, Math.PI * 2);
       ctx.strokeStyle = '#000';
       ctx.stroke();
 
       // 绘制表盘的刻度
       for (let i = 0; i < 12; i++) {
         ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.translate(250, 250);
         ctx.rotate(i * (Math.PI / 6));
         ctx.beginPath();
         ctx.moveTo(0, -180); ctx.lineTo(0, -200);
@@ -48,21 +50,21 @@ export default {
       const second = date.getSeconds();
       // 时针
       ctx.save();
-      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.translate(250, 250);
       ctx.rotate(hour * (Math.PI / 6) + minute * (Math.PI / 360) + second * (Math.PI / 21600)); ctx.beginPath();
       ctx.moveTo(0, - 100); ctx.lineTo(0, 20);
       ctx.strokeStyle = '#000'; ctx.stroke();
       ctx.restore();
       // 分针
       ctx.save();
-      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.translate(250, 250);
       ctx.rotate(minute * (Math.PI / 30) + second * (Math.PI / 1800)); ctx.beginPath();
       ctx.moveTo(0, -160); ctx.lineTo(0, 20);
       ctx.strokeStyle = '#000'; ctx.stroke();
       ctx.restore();
       // 秒针
       ctx.save();
-      ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(second * (Math.PI / 30));
+      ctx.translate(250, 250); ctx.rotate(second * (Math.PI / 30));
       ctx.beginPath();
       ctx.moveTo(0, -180); ctx.lineTo(0, 20);
       ctx.strokeStyle = '#f00'; ctx.stroke();
