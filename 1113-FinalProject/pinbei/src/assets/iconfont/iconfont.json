@@ -1,0 +1,72 @@
+{
+  "id": "4362706",
+  "name": "拼呗（快应用）",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "1130",
+      "name": "锁定",
+      "font_class": "suoding",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "577337",
+      "name": "分享",
+      "font_class": "fenxiang",
+      "unicode": "e739",
+      "unicode_decimal": 59193
+    },
+    {
+      "icon_id": "4406936",
+      "name": "评论",
+      "font_class": "pinglun",
+      "unicode": "e60b",
+      "unicode_decimal": 58891
+    },
+    {
+      "icon_id": "10299094",
+      "name": "进行中",
+      "font_class": "jinhangzhong",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "10299105",
+      "name": "已完成",
+      "font_class": "yiwancheng",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "27253672",
+      "name": "验证码",
+      "font_class": "yanzhengma",
+      "unicode": "e613",
+      "unicode_decimal": 58899
+    },
+    {
+      "icon_id": "34452814",
+      "name": "customer-fill",
+      "font_class": "customer-fill",
+      "unicode": "e828",
+      "unicode_decimal": 59432
+    },
+    {
+      "icon_id": "34453049",
+      "name": "search",
+      "font_class": "search",
+      "unicode": "e840",
+      "unicode_decimal": 59456
+    },
+    {
+      "icon_id": "34453243",
+      "name": "phone-fill",
+      "font_class": "phone-fill",
+      "unicode": "e85f",
+      "unicode_decimal": 59487
+    }
+  ]
+}

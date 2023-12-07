@@ -1,0 +1,38 @@
+<template>
+  <div class="wrapper">
+    <text class="title">{{ title }}</text>
+  </div>
+</template>
+
+<script>
+export default {
+  /**
+   * 自定义组件数据模型，只能使用 data 属性；data 类型可以是 Object 或 Function；
+   * 页面级组件数据模型，data 方式声明的属性会被外部数据覆盖，可能存在一定安全风险；
+   * 官方推荐使用 public, protected, private 来声明属性；https://doc.quickapp.cn/framework/script.html?h=public
+   */
+  data() {
+    return {
+      title: '欢迎体验快应用开发'
+    }
+  },
+
+  onInit() { },
+
+  onReady() { },
+
+  onDestroy() { }
+}
+</script>
+
+<style>
+.wrapper {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.title {
+  text-align: center;
+  color: #212121;
+}
+</style>

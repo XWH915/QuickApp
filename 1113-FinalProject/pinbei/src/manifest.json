@@ -1,0 +1,74 @@
+{
+  "package": "com.example.pinbei",
+  "name": "pinbei",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "minPlatformVersion": 1070,
+  "icon": "/assets/images/logo.png",
+  "features": [
+    {
+      "name": "system.prompt"
+    },
+    {
+      "name": "system.router"
+    },
+    {
+      "name": "system.shortcut"
+    },
+    {
+      "name": "system.fetch"
+    }
+  ],
+  "permissions": [
+    {
+      "origin": "*"
+    }
+  ],
+  "template/official": "demo-template",
+  "config": {
+    "logLevel": "debug"
+  },
+  "router": {
+    "entry": "pages/Login",
+    "pages": {      
+      "pages/Login": {
+        "component": "index"
+      },      
+      "pages/Register": {
+        "component": "index"
+      },
+      "pages/PostList": {
+        "component": "index"
+      },
+      "pages/PostDetail": {
+        "component": "index"
+      },
+      "pages/AddPost": {
+        "component": "index"
+      }
+    },
+    "widgets": {
+    }
+  },
+  "display": {
+    "titleBarBackgroundColor": "#fff",
+    "titleBarTextColor": "#414141",
+    "pages": {
+      "pages/Login": {
+        "titleBarText": "拼呗"
+      },
+      "pages/Register": {
+        "titleBarText": ""
+      },
+      "pages/PostList": {
+        "titleBarText": "拼呗"
+      },
+      "pages/PostDetail": {
+        "titleBarText": "拼呗"
+      },
+      "pages/AddPost": {
+        "titleBarText": "拼呗"
+      }
+    }
+  }
+}

@@ -1,0 +1,133 @@
+<template>
+  <div class="wrapper">
+    <text class="title">拼呗</text>
+    <text class="tips">区域性的线下拼单平台</text>
+    <input class='input' type="text" placeholder='请输入手机号' value="{{phone}}" onchange="updatePhone"></input>
+    <input class='input' type="password" placeholder='请输入密码' value="{{password}}" onchange="updatePassword"></input>
+    <div class="btn-wrap">
+      <input class='btn left' type="button" value='登录' onclick="login()"></input>
+      <input class='btn' type="button" value='注册' onclick="register()"></input>
+    </div>
+  </div>
+</template>
+
+<script>
+import storage from '@system.storage'
+import router from '@system.router'
+import fetch from '@system.fetch'
+
+export default {
+  data() {
+    return {
+      phone: '',
+      password: '',
+    }
+  },
+
+  onShow() {
+    // 调用flask接口
+    // fetch.fetch({
+    //   url: 'http://10.29.243.69/test',
+    //   responseType: 'text'
+    // }).then(res => {
+    //   console.log(res);
+    // }).catch(error => {
+    //   console.log(`handling fail, errMsg = ${error.data}`)
+    //   console.log(`handling fail, errCode = ${error.code}`)
+    // })
+    
+    // 自动填入账号密码
+    let that=this;
+    storage.get({
+      key: 'phone|||password',
+      success: function(data) {
+        console.log('handling success')
+        const arr = data.split("|||");
+        that.phone=arr[0];
+        that.password=arr[1];
+      },
+      fail: function(data, code) {
+        console.log(`handling fail, code = ${code}`)
+      }
+    })
+  },
+
+  updatePhone(e) {
+    this.phone = e.value;
+  },
+
+  updatePassword(e) {
+    this.password = e.value;
+  },
+
+  login() {
+    const phone = this.phone;
+    const password = this.password;
+    if (phone === '13767063831' && password === '123456') {
+      // 调用登录接口
+      // 成功则执行以下语句
+      console.log('登录成功');
+      storage.set({
+        key: 'phone|||password',
+        value: phone+'|||'+password,
+        success: function(data) {
+          console.log('handling success')
+        },
+        fail: function(data, code) {
+          console.log(`handling fail, code = ${code}`)
+        }
+      })
+      router.push({
+        uri: "pages/PostList"
+      })
+    } else {
+      console.log('手机号或密码错误');
+    }
+  },
+
+  register() {
+    console.log('注册');
+    router.push({
+      uri: "pages/Register"
+    })
+  }
+}
+</script>
+
+<style>
+.wrapper {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.title {
+  color: #7adbd4;
+  font-weight: 700;
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+.tips {
+  color: #7adbd4;
+  font-size: 30px;
+  margin-bottom: 80px;
+}
+.input {
+  width: 60%;
+  padding: 20px;
+  margin-bottom: 40px;
+  font-size: 34px;
+  border: 1px solid #ccc;
+  background-color: #f2f2f2;
+}
+.btn {
+  background-color: #7adbd4;
+  color: #fff;
+  font-size: 40px;
+  padding: 20px 50px;
+  border-radius: 20px;
+  margin-top: 40px;
+}
+.left{
+  margin-right: 40px;
+}
+</style>
