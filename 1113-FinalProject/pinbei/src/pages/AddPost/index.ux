@@ -1,38 +1,190 @@
 <template>
   <div class="wrapper">
-    <text class="title">{{ title }}</text>
+    <div class="title">
+      <input class='input' type="text" placeholder='帖子标题...' value="{{title}}" onchange="updateTitle"></input>
+      <div class='asr-image1' onclick='startAsr("title")'></div>
+    </div>
+    <div class="content">
+      <textarea class='input1' placeholder='说点什么吧...' onchange="updateContent">{{content}}</textarea>
+      <div class='asr-image2' onclick='startAsr("content")'></div>
+    </div>
+    <input class='btn' type="button" value='发送' onclick="addPost()"></input>
   </div>
 </template>
 
 <script>
+import storage from '@system.storage'
+import router from '@system.router'
+import fetch from '@system.fetch'
+import prompt from '@system.prompt'
+import asr from '@service.asr'
+import vibrator from '@system.vibrator'
+
 export default {
-  /**
-   * 自定义组件数据模型，只能使用 data 属性；data 类型可以是 Object 或 Function；
-   * 页面级组件数据模型，data 方式声明的属性会被外部数据覆盖，可能存在一定安全风险；
-   * 官方推荐使用 public, protected, private 来声明属性；https://doc.quickapp.cn/framework/script.html?h=public
-   */
   data() {
     return {
-      title: '欢迎体验快应用开发'
+      title: '',
+      titlePre: '',
+      content: '',
+      contentPre: '',
+      currentItem: '',
+    }
+  },
+  
+  onInit() {
+    this.initAsr();
+  },
+
+  initAsr() {
+    let that = this;
+    asr.oncompleteresult = ({ result }) => {
+      this[this.currentItem] = this[this.currentItem+'Pre'] + `${result}`
     }
   },
 
-  onInit() { },
+  startAsr(item) {
+    this.currentItem = item;
+    let that = this;
+    this[this.currentItem+'Pre'] = this[this.currentItem];
+    asr.start({
+      success: function () {
+        //多调用几遍使震动明显一些
+        vibrator.vibrate({ mode: 'short' });
+        vibrator.vibrate({ mode: 'short' });
+        vibrator.vibrate({ mode: 'short' });
+      },
+      fail: function (data, code) {
+        that[this.currentItem] = `start fail, code=${code}, data=${data}`;
+      }
+    })
+  },
 
-  onReady() { },
+  updateTitle(e) {
+    this.title = e.value;
+  },
 
-  onDestroy() { }
+  updateContent(e) {
+    this.content = e.value;
+  },
+
+  addPost() {
+    let that=this;
+    const title = this.title;
+    const content = this.content;
+    
+    if (typeof title === "string" && title.trim().length === 0) {
+      prompt.showToast({
+        message: '请输入帖子标题'
+      })
+      return;
+    }
+    if (typeof content === "string" && content.trim().length === 0) {
+      prompt.showToast({
+        message: '请输入帖子正文'
+      })
+      return;
+    }
+    
+    storage.get({
+      key: 'userid|||username',
+      success: function(data) {
+        console.log('handling success')
+        const arr = data.split("|||");
+        const userid=arr[0];
+        const username=arr[1];
+        
+        // 调用发帖接口
+        fetch.fetch({
+          url: 'http://'+that.$app.$data.IP+'/addPost?title='+title+'&content='+content+'&userid='+userid+'&username='+username,
+          responseType: 'text'
+        }).then(res => {
+          const result=JSON.parse(res.data.data);
+          console.log(result);
+          if(result.code==1){
+            prompt.showToast({
+              message: result.data.message
+            })
+            if(result.data.result){
+              vibrator.vibrate({ mode: 'short' });
+              router.replace({
+                uri: "pages/PostDetail",
+                params: { id: result.data.postid }
+              })
+            }
+          }else{
+            prompt.showToast({
+              message: result.message
+            })
+          }
+        }).catch(error => {
+          console.log(`handling fail, errMsg = ${error.data}`)
+          console.log(`handling fail, errCode = ${error.code}`)
+          prompt.showToast({
+            message: '服务器发生未知错误，请稍后重试'
+          })
+        })
+      },
+      fail: function(data, code) {
+        console.log(`handling fail, code = ${code}`)
+      }
+    })
+  },
 }
 </script>
 
 <style>
 .wrapper {
   flex-direction: column;
-  justify-content: center;
+  /* justify-content: center; */
   align-items: center;
 }
-.title {
-  text-align: center;
-  color: #212121;
+.title, content {
+  position: relative;
+  width: 100%;
+  flex-direction: column;
+  /* justify-content: center; */
+  align-items: center;
+}
+.input {
+  width: 100%;
+  padding: 20px;
+  padding-right: 80px;
+  margin-bottom: 20px;
+  font-size: 38px;
+  background-color: #f2f2f2;
+}
+.input1 {
+  width: 100%;
+  height: 400px;
+  padding: 20px;
+  margin-bottom: 20px;
+  font-size: 30px;
+  background-color: #f2f2f2;
+}
+.btn {
+  width: 60%;
+  height: 80px;
+  font-size: 34px;
+  border-radius: 40px;
+  background-color: #7adbd4;
+  color: #fff;
+  margin-top: 40px;
+}
+
+.asr-image1 {
+  position: absolute;
+  right: 20px;
+  top: 25px;
+  width: 40px;
+  height: 40px;
+  background-image: url("/assets/images/asr.png");
+}
+.asr-image2 {
+  position: absolute;
+  right: 20px;
+  top: 340px;
+  width: 40px;
+  height: 40px;
+  background-image: url("/assets/images/asr.png");
 }
 </style>

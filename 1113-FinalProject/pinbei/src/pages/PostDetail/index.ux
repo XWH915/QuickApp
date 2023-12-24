@@ -1,38 +1,386 @@
 <template>
   <div class="wrapper">
-    <text class="title">{{ title }}</text>
+    <div class="post">
+      <div class="row1">
+        <div class="username">
+          <text>{{post.userName}}</text>
+        </div>
+        <div>
+          <text class="finished" if="{{post.finished}}"><span class="iconfont">&#xe602;</span></text>
+          <text class="unfinished" else onclick="changeStatus()"><span class="iconfont">&#xe601;</span></text>
+        </div>
+      </div>
+      <div class="title">
+        <text>{{post.title}}</text>
+      </div>
+      <div class="content">
+        <text>{{post.content}}</text>
+      </div>
+      <div class="time">
+        <text>{{post.time}}</text>
+      </div>
+    </div>
+    <div class="ops">
+      <div class="comment-wrap">
+        <input class='input' type="text" placeholder='说点什么吧...' value="{{comment}}" onchange="updateComment"></input>
+        <input class='btn' type="button" value='评论' onclick="addComment()"></input>
+      </div>
+      <div class="share-wrap">
+        <text class="icon" onclick="share()"><span class="iconfont">&#xe739;</span></text>
+      </div>
+    </div>
+    <div class="comments">
+      <div class="head">
+        <text>评论</text>
+      </div>
+      <div if="{{Array.isArray(post.comments) && post.comments.length}}" class="comment" for="{{post.comments}}">
+        <div class="row11">
+          <text>{{$item.userName}}: {{$item.comment}}</text>
+        </div>
+        <div class="row22">
+          <text>{{$item.time}}</text>
+          <text>{{$idx + 1}}楼</text>
+        </div>
+      </div>
+      <div else class="no-comment">
+        <text>暂无数据</text>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import storage from '@system.storage'
+import router from '@system.router'
+import fetch from '@system.fetch'
+import prompt from '@system.prompt'
+import clipboard from '@system.clipboard'
+import vibrator from '@system.vibrator'
+
 export default {
-  /**
-   * 自定义组件数据模型，只能使用 data 属性；data 类型可以是 Object 或 Function；
-   * 页面级组件数据模型，data 方式声明的属性会被外部数据覆盖，可能存在一定安全风险；
-   * 官方推荐使用 public, protected, private 来声明属性；https://doc.quickapp.cn/framework/script.html?h=public
-   */
   data() {
     return {
-      title: '欢迎体验快应用开发'
+      protected: {
+        id: ''
+      },
+      post: {},
+      comment: '',
     }
   },
 
-  onInit() { },
+  onShow() {
+    this.getPostDetail();
+  },
 
-  onReady() { },
+  getPostDetail() {
+    let that=this;
+    // 调用获取帖子详情接口
+    fetch.fetch({
+      url: 'http://'+that.$app.$data.IP+'/getPost?postid='+that.id,
+      responseType: 'text'
+    }).then(res => {
+      const result=JSON.parse(res.data.data);
+      console.log(result);
+      if(result.code==1){
+        that.post=result.data.post;
+      }else{
+        prompt.showToast({
+          message: result.message
+        })
+      }
+    }).catch(error => {
+      console.log(`handling fail, errMsg = ${error.data}`)
+      console.log(`handling fail, errCode = ${error.code}`)
+      prompt.showToast({
+        message: '服务器发生未知错误，请稍后重试'
+      })
+    })
+  },
 
-  onDestroy() { }
+  changeStatus() {
+    let that=this;
+    storage.get({
+      key: 'userid|||username',
+      success: function(data) {
+        console.log('handling success')
+        const arr = data.split("|||");
+        const userid=arr[0];
+        const username=arr[1];
+        
+        if(userid!=that.post.userId){
+          return;
+        }
+
+        prompt.showDialog({
+          title: '拼单已完成？',
+          message: '该操作将修改帖子状态，请谨慎处理。',
+          buttons: [
+            {
+              text: '确定',
+              color: '#7adbd4'
+            },
+            {
+              text: '取消',
+              color: '#999'
+            }
+          ],
+          success: function(data) {
+            if(data.index==0){
+              that.post.finished=true;
+              // 调用修改帖子状态接口
+              fetch.fetch({
+                url: 'http://'+that.$app.$data.IP+'/switchPostStatus?postid='+that.id,
+                responseType: 'text'
+              }).then(res => {
+                const result=JSON.parse(res.data.data);
+                console.log(result);
+                if(result.code==1){
+                  prompt.showToast({
+                    message: result.data.message
+                  })
+                  if(result.data.result){
+                    vibrator.vibrate({ mode: 'short' });
+                    that.getPostDetail();
+                  }
+                }else{
+                  prompt.showToast({
+                    message: result.message
+                  })
+                }
+              }).catch(error => {
+                console.log(`handling fail, errMsg = ${error.data}`)
+                console.log(`handling fail, errCode = ${error.code}`)
+                prompt.showToast({
+                  message: '服务器发生未知错误，请稍后重试'
+                })
+              })
+            }
+          }
+        })
+      },
+      fail: function(data, code) {
+        console.log(`handling fail, code = ${code}`)
+      }
+    })
+  },
+  
+  updateComment(e) {
+    this.comment = e.value;
+  },
+
+  addComment() {
+    let that=this;
+    const comment=this.comment;
+    
+    if (typeof comment === "string" && comment.trim().length === 0) {
+      prompt.showToast({
+        message: '请输入评论内容'
+      })
+      return;
+    }
+    
+    storage.get({
+      key: 'userid|||username',
+      success: function(data) {
+        console.log('handling success')
+        const arr = data.split("|||");
+        const userid=arr[0];
+        const username=arr[1];
+        
+        // 调用评论接口
+        fetch.fetch({
+          url: 'http://'+that.$app.$data.IP+'/comment?comment='+comment+'&userid='+userid+'&username='+username+'&postid='+that.id,
+          responseType: 'text'
+        }).then(res => {
+          const result=JSON.parse(res.data.data);
+          console.log(result);
+          if(result.code==1){
+            prompt.showToast({
+              message: result.data.message
+            })
+            if(result.data.result){
+              vibrator.vibrate({ mode: 'short' });
+              that.getPostDetail();
+              that.comment='';
+            }
+          }else{
+            prompt.showToast({
+              message: result.message
+            })
+          }
+        }).catch(error => {
+          console.log(`handling fail, errMsg = ${error.data}`)
+          console.log(`handling fail, errCode = ${error.code}`)
+          prompt.showToast({
+            message: '服务器发生未知错误，请稍后重试'
+          })
+        })
+      },
+      fail: function(data, code) {
+        console.log(`handling fail, code = ${code}`)
+      }
+    })
+  },
+
+  share() {
+    clipboard.set({
+      text: 'http://pinbei/post/detail/'+this.id,
+      success: function(data) {
+        prompt.showToast({
+          message: '已复制到剪切板，可将该链接粘贴到应用内搜索框进行浏览~'
+        })
+      },
+      fail: function(data, code) {
+        console.log(`handling fail, code = ${code}`)
+      }
+    })
+  }
 }
 </script>
 
-<style>
+<style lang="less">
+@font-face {
+  font-family: iconfont;
+  src: url("../../assets/iconfont/iconfont.ttf");
+}
+.iconfont {
+  font-family: iconfont;
+  font-size: 50px;
+}
+
 .wrapper {
   flex-direction: column;
-  justify-content: center;
+  /* justify-content: center; */
   align-items: center;
 }
+.post {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+}
+.row1 {
+  width: 100%;
+  padding: 20px 50px;
+  position: relative;
+  justify-content: space-between;
+
+  .username {
+    text {
+      color: #000;
+      font-size: 46px;
+    }
+  }
+
+  .unfinished {
+    color: #7adbd4;
+    span {
+      font-size: 150px;
+    }
+  }
+  .finished {
+    color: red;
+    span {
+      font-size: 150px;
+    }
+  }
+}
 .title {
-  text-align: center;
-  color: #212121;
+  width: 100%;
+  padding: 20px 40px;
+  padding-bottom: 0;
+
+  text {
+    font-size: 38px;
+    color: #000;
+  }
+}
+.content {
+  width: 100%;
+  padding: 20px 40px;
+  padding-bottom: 0;
+
+  text {
+    font-size: 32px;
+    color: #000;
+  }
+}
+.time {
+  width: 100%;
+  padding: 20px 40px;
+}
+
+.ops {
+  width: 100%;
+  justify-content: space-between;
+  border-bottom: 1px solid #ccc;
+
+  .comment-wrap {
+    width: 90%;
+    padding: 20px;
+    justify-content: space-between;
+
+    .input {
+      width: 76%;
+      padding: 20px;
+      font-size: 32px;
+      background-color: #f2f2f2;
+    }
+    .btn {
+      width: 20%;
+      height: 80px;
+      font-size: 32px;
+      border-radius: 20px;
+      background-color: #7adbd4;
+      color: #fff;
+    }
+  }
+  .share-wrap {
+    width: 10%;
+  }
+}
+
+.comments {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 40px;
+
+  .head {
+    width: 100%;
+    padding-bottom: 20px;
+    /* border-bottom: 1px solid #ccc; */
+
+    text {
+      font-size: 32px;
+      font-weight: 700;
+      color: #000;
+    }
+  }
+
+  .comment {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid #ccc;
+
+    .row11 {
+      width: 100%;
+
+      text {
+        color: #000;
+        font-size: 32px;
+      }
+    }
+    .row22 {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+
+  .no-comment {
+    padding: 20px;
+  }
 }
 </style>

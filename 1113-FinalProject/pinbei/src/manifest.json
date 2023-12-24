@@ -17,6 +17,15 @@
     },
     {
       "name": "system.fetch"
+    },
+    {
+      "name": "system.clipboard"
+    },
+    {
+      "name": "service.asr"
+    },
+    {
+      "name": "system.vibrator"
     }
   ],
   "permissions": [
@@ -26,7 +35,10 @@
   ],
   "template/official": "demo-template",
   "config": {
-    "logLevel": "debug"
+    "logLevel": "debug",
+    "data": {
+      "IP": "10.29.243.69"
+    }
   },
   "router": {
     "entry": "pages/Login",
@@ -61,13 +73,13 @@
         "titleBarText": ""
       },
       "pages/PostList": {
-        "titleBarText": "拼呗"
+        "titleBarText": "首页"
       },
       "pages/PostDetail": {
-        "titleBarText": "拼呗"
+        "titleBarText": "详情"
       },
       "pages/AddPost": {
-        "titleBarText": "拼呗"
+        "titleBarText": "发布帖子"
       }
     }
   }

@@ -2,13 +2,23 @@
   <div class="wrapper">
     <text class="title">欢迎注册</text>
     <text class="tips">已有账号？<a id="login" onclick="login()">登录</a></text>
-    <input class='input' type="text" placeholder='请输入用户名' value="{{username}}" onchange="updateUsername"></input>
-    <input class='input' type="text" placeholder='请输入手机号' value="{{phone}}" onchange="updatePhone"></input>
-    <input class='input' type="password" placeholder='请输入密码' value="{{password}}" onchange="updatePassword"></input>
-    <div class="code-wrap">
-      <input class='input code-input' type="text" placeholder='请输入验证码' value="{{code}}" onchange="updateCode"></input>
+    <div class="username">
+      <input class='input' type="text" placeholder='用户名' value="{{username}}" onchange="updateUsername"></input>
+      <text class="icon"><span class="iconfont">&#xe828;</span></text>
+    </div>
+    <div class="phone">
+      <input class='input' type="text" placeholder='手机号' value="{{phone}}" onchange="updatePhone"></input>
+      <text class="icon"><span class="iconfont">&#xe85f;</span></text>
+    </div>
+    <div class="password">
+      <input class='input' type="password" placeholder='密码' value="{{password}}" onchange="updatePassword"></input>
+      <text class="icon"><span class="iconfont">&#xe600;</span></text>
+    </div>
+    <div class="code">
+      <input class='input code-input' type="text" placeholder='验证码' value="{{code}}" onchange="updateCode"></input>
       <input if='{{!hasGetCode}}' class='code-btn' type="button" value='获取验证码' onclick="getCode()"></input>
       <input if='{{hasGetCode}}' class='code-btn1' type="button" value='已获取'></input>
+      <text class="icon"><span class="iconfont">&#xe613;</span></text>
     </div>
     <input class='btn' type="button" value='注册' onclick="register()"></input>
   </div>
@@ -17,6 +27,9 @@
 <script>
 import storage from '@system.storage'
 import router from '@system.router'
+import fetch from '@system.fetch'
+import prompt from '@system.prompt'
+import vibrator from '@system.vibrator'
 
 export default {
   data() {
@@ -28,12 +41,6 @@ export default {
       hasGetCode: false,
     }
   },
-
-  onInit() { },
-
-  onReady() { },
-
-  onDestroy() { },
 
   updateUsername(e) {
     this.username = e.value;
@@ -61,34 +68,89 @@ export default {
   },
 
   register() {
+    let that=this;
     const username = this.username;
     const phone = this.phone;
     const password = this.password;
     const code = this.code;
     const hasGetCode = this.hasGetCode;
-    if(hasGetCode && code!==''){
-      // 调用注册接口
-      // 成功则执行以下语句
-      console.log('注册成功');
-      storage.set({
-        key: 'phone|||password',
-        value: phone+'|||'+password,
-        success: function(data) {
-          console.log('handling success')
-        },
-        fail: function(data, code) {
-          console.log(`handling fail, code = ${code}`)
-        }
+
+    if (typeof username === "string" && username.trim().length === 0) {
+      prompt.showToast({
+        message: '请输入用户名'
       })
-      this.login();
-    }else {
-      console.log('请正确输入验证码');
+      return;
     }
+    if (typeof phone === "string" && phone.trim().length === 0) {
+      prompt.showToast({
+        message: '请输入手机号'
+      })
+      return;
+    }
+    if (typeof password === "string" && password.trim().length === 0) {
+      prompt.showToast({
+        message: '请输入密码'
+      })
+      return;
+    }
+    if (!hasGetCode || (typeof code === "string" && code.trim().length === 0)) {
+      prompt.showToast({
+        message: '请正确输入验证码'
+      })
+      return;
+    }
+    
+    // 调用注册接口
+    fetch.fetch({
+      url: 'http://'+that.$app.$data.IP+'/register?username='+username+'&phone='+phone+'&password='+password,
+      responseType: 'text'
+    }).then(res => {
+      const result=JSON.parse(res.data.data);
+      console.log(result);
+      if(result.code==1){
+        prompt.showToast({
+          message: result.data.message
+        })
+        if(result.data.result){
+          vibrator.vibrate({ mode: 'short' });
+          storage.set({
+            key: 'phone|||password',
+            value: phone+'|||'+password,
+            success: function(data) {
+              console.log('handling success')
+            },
+            fail: function(data, code) {
+              console.log(`handling fail, code = ${code}`)
+            }
+          })
+          this.login();
+        }
+      }else{
+        prompt.showToast({
+          message: result.message
+        })
+      }
+    }).catch(error => {
+      console.log(`handling fail, errMsg = ${error.data}`)
+      console.log(`handling fail, errCode = ${error.code}`)
+      prompt.showToast({
+        message: '服务器发生未知错误，请稍后重试'
+      })
+    })
   }
 }
 </script>
 
-<style>
+<style lang="less">
+@font-face {
+  font-family: iconfont;
+  src: url("../../assets/iconfont/iconfont.ttf");
+}
+.iconfont {
+  font-family: iconfont;
+  font-size: 32px;
+}
+
 .wrapper {
   flex-direction: column;
   justify-content: center;
@@ -108,17 +170,32 @@ export default {
   color: #7adbd4;
 }
 .input {
-  width: 60%;
+  width: 100%;
   padding: 20px;
+  padding-left: 60px;
   margin-bottom: 40px;
   font-size: 34px;
   border: 1px solid #ccc;
   background-color: #f2f2f2;
 }
-.code-wrap {
+.icon {
+  position: absolute;
+  left: 20px;
+  top: 27px;
+  z-index: 999;
+}
+.username, .phone, .password {
+  width: 60%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+.code {
   width: 60%;
   justify-content: space-between;
   margin-bottom: 40px;
+  position: relative;
 }
 .code-input {
   width: 60%;
